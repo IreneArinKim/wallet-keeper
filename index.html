@@ -405,7 +405,7 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
       </div>
       <p class="note" style="margin:0">지금 앱 시계: <b id="demoClock"></b></p>
     </div>
-    <p class="note">기록은 이 폰의 브라우저에만 저장돼. 코칭 문구는 RFM 4지표 조건에 따라 미리 쓴 규칙표에서 고르고, AI 문장 생성은 본선 이후 붙일 예정이야.</p>
+    <p class="note">(v2.1) 기록은 이 폰의 브라우저에만 저장돼. 코칭 문구는 RFM 4지표 조건에 따라 미리 쓴 규칙표에서 고르고, AI 문장 생성은 본선 이후 붙일 예정이야.</p>
   </section>
 </div>
 
@@ -490,16 +490,21 @@ function paydayBonus(){ try{ const d=now(); const ym=d.getFullYear()+'-'+(d.getM
   const m=metrics(); const b=Math.min(5,Math.floor(Math.max(0,m.remain)/10000)); S.lastBonusYm=ym; if(b>0){ S.coins=(S.coins||0)+b; S.bonusCoins=(S.bonusCoins||0)+b; } save(); if(b>0) toast(`용돈 ${fmt(m.remain)}원 남겼어! 🪙 보너스 코인 +${b}`); }catch(e){} }
 function tone(){ return TONES[S.tone]||TONES.friend; }
 const AUDIO_OK={}; let curAudio=null;
-function speak(text,key){ try{ if(!S.voiceOn) return; const t=tone(), k=S.tone;
-  if(curAudio){ curAudio.pause(); curAudio=null; } if('speechSynthesis' in window) speechSynthesis.cancel();
-  const tts=()=>{ if(!('speechSynthesis' in window)) return; const u=new SpeechSynthesisUtterance(String(text).replace(/[*_]/g,'')); u.lang='ko-KR'; u.pitch=t.voice.pitch; u.rate=t.voice.rate;
+let speakSeq=0;
+function speak(text,key){ try{ if(!S.voiceOn) return; const t=tone(), k=S.tone; const my=++speakSeq;
+  if(curAudio){ try{curAudio.pause();}catch(e){} curAudio=null; } if('speechSynthesis' in window){ try{speechSynthesis.cancel();}catch(e){} }
+  const tts=()=>{ if(my!==speakSeq) return; if(!('speechSynthesis' in window)) return;
+    // 이 캐릭터에 녹음 파일이 하나라도 있으면 기계 목소리는 쓰지 않음 (겹침 방지)
+    if(Object.keys(AUDIO_OK).some(x=>x.startsWith(k+'|')&&AUDIO_OK[x]===true)) return;
+    const u=new SpeechSynthesisUtterance(String(text).replace(/[*_]/g,'')); u.lang='ko-KR'; u.pitch=t.voice.pitch; u.rate=t.voice.rate;
     const vs=speechSynthesis.getVoices().filter(x=>x.lang&&x.lang.replace('_','-').startsWith('ko')); if(vs.length) u.voice=vs[t.voice.vi%vs.length]; speechSynthesis.speak(u); };
-  // 녹음 파일 우선: 해당 문장 → 그 캐릭터 기본(manual) 녹음 → 기계 목소리
+  // 녹음 파일 우선: 해당 문장 → 그 캐릭터 기본(manual) 녹음 → (녹음이 전혀 없을 때만) 기계 목소리
   const chain=[]; if(key) chain.push(key); if(key!=='manual') chain.push('manual');
-  const tryNext=()=>{ const kk=chain.shift(); if(!kk){ tts(); return; } if(AUDIO_OK[k+kk]===false){ tryNext(); return; }
-    const a=new Audio(`voice_${k}_${kk}.mp3`); curAudio=a;
-    a.addEventListener('error',()=>{ AUDIO_OK[k+kk]=false; tryNext(); }); a.addEventListener('canplay',()=>{ AUDIO_OK[k+kk]=true; });
-    a.play().catch(()=>{ AUDIO_OK[k+kk]=false; tryNext(); }); };
+  const tryNext=()=>{ if(my!==speakSeq) return; const kk=chain.shift(); if(!kk){ tts(); return; } const id=k+'|'+kk; if(AUDIO_OK[id]===false){ tryNext(); return; }
+    const a=new Audio(`voice_${k}_${kk}.mp3`); curAudio=a; let moved=false;
+    const fail=()=>{ if(moved) return; moved=true; AUDIO_OK[id]=false; if(curAudio===a) curAudio=null; tryNext(); };
+    a.addEventListener('error',fail); a.addEventListener('canplay',()=>{ AUDIO_OK[id]=true; });
+    const pr=a.play(); if(pr&&pr.catch) pr.catch(fail); };
   tryNext(); }catch(e){} }
 function th(){ return Object.assign({},DEF_TH,S.th||{}); }
 function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; if(x.voiceOn==null) x.voiceOn=true; migrateShop(x); x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
