@@ -420,24 +420,33 @@ const KEY='wallet-keeper-v1';
 const WHYS=[['need','필요해서'],['event','1+1 · 행사'],['friend','친구 따라'],['bored','심심해서'],['mood','기분 전환']];
 const WHYNAME=Object.fromEntries(WHYS);
 const TONES={
-  friend:{name:'찐친 지지',em:'😎',price:0,voice:{pitch:1.0,rate:1.05},desc:'친구가 툭 던지는 반말',
+  friend:{name:'찐친 지지',em:'😎',price:0,voice:{pitch:1.0,rate:1.1,vi:0},desc:'친구가 툭 던지는 반말',
     night:'밤 10시 넘었어. 지금은 충동 소비 시간대야.',manual:'잠깐. 지금 사려는 거, 3초 뒤에도 필요해?',pattern:c=>`오늘도 ${c} 갈 확률 높아. 3초만 생각하고 가자.`,
     hold:a=>a?`잘 참았어. ${a}원 지켰어`:'잘 참았어. 성공률에 기록했어',buy:'알겠어. 결제하면 기록에 적어 줘',wrap:m=>m},
-  senior:{name:'다정한 선배',em:'🌙',price:0,voice:{pitch:0.85,rate:0.9},desc:'부드럽게 다독이는 말투',
+  senior:{name:'다정한 선배',em:'🌙',price:0,voice:{pitch:0.6,rate:0.8,vi:1},desc:'부드럽게 다독이는 말투',
     night:'밤 10시가 넘었네. 이 시간엔 마음이 먼저 움직여.',manual:'잠깐만. 3초 뒤에도 갖고 싶을까? 천천히 생각해 보자.',pattern:c=>`오늘도 ${c}에 가고 싶지? 괜찮아, 3초만 같이 생각하자.`,
     hold:a=>a?`잘했어. ${a}원을 지켰네, 대단해`:'잘했어. 네가 고른 거야',buy:'그래, 네 선택이야. 기록만 남겨 두자',wrap:m=>m+' 괜찮아, 알고 쓰는 게 중요해.'},
-  cheer:{name:'응원단장',em:'📣',price:5,voice:{pitch:1.25,rate:1.2},desc:'느낌표 가득 파이팅',
+  cheer:{name:'응원단장',em:'📣',price:5,voice:{pitch:1.7,rate:1.35,vi:2},desc:'느낌표 가득 파이팅',
     night:'밤 10시! 여기서 멈추면 오늘 경기 승리!',manual:'3초 타임아웃! 이거 진짜 필요한지 작전 타임!',pattern:c=>`${c} 이번 주 세 번째! 오늘은 패스하고 한 골 넣자!`,
     hold:a=>a?`나이스 세이브! ${a}원 지켰다!`:'나이스 세이브!',buy:'오케이! 결제 기록 잊지 마!',wrap:m=>m+' 파이팅!'},
-  cat:{name:'츤데레 고양이',em:'🐱',price:8,voice:{pitch:1.4,rate:1.0},desc:'퉁명한데 챙겨 주는 말투',
+  cat:{name:'츤데레 고양이',em:'🐱',price:8,voice:{pitch:1.9,rate:0.95,vi:3},desc:'퉁명한데 챙겨 주는 말투',
     night:'...밤 10시잖아. 또 사게? 흥, 3초만 참아 봐.',manual:'3초. 그거 없어도 안 죽어. 아마도.',pattern:c=>`${c} 또? 이번 주 세 번째인 거 알지. 3초.`,
     hold:a=>a?`...${a}원 지켰네. 뭐, 나쁘지 않아.`:'...뭐, 잘했어.',buy:'마음대로 해. 기록은 하고.',wrap:m=>'흥. '+m}
 };
 const DEF_TH={night:50,repeat:3,budget:80};
 function tone(){ return TONES[S.tone]||TONES.friend; }
-function speak(text){ try{ if(!S.voiceOn||!('speechSynthesis' in window)) return; const t=tone(); speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(String(text).replace(/[*_]/g,'')); u.lang='ko-KR'; u.pitch=t.voice.pitch; u.rate=t.voice.rate;
-  const v=speechSynthesis.getVoices().find(x=>x.lang&&x.lang.replace('_','-').startsWith('ko')); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){} }
+const AUDIO_OK={}; let curAudio=null;
+function speak(text,key){ try{ if(!S.voiceOn) return; const t=tone(), k=S.tone;
+  if(curAudio){ curAudio.pause(); curAudio=null; } if('speechSynthesis' in window) speechSynthesis.cancel();
+  const tts=()=>{ if(!('speechSynthesis' in window)) return; const u=new SpeechSynthesisUtterance(String(text).replace(/[*_]/g,'')); u.lang='ko-KR'; u.pitch=t.voice.pitch; u.rate=t.voice.rate;
+    const vs=speechSynthesis.getVoices().filter(x=>x.lang&&x.lang.replace('_','-').startsWith('ko')); if(vs.length) u.voice=vs[t.voice.vi%vs.length]; speechSynthesis.speak(u); };
+  // 녹음 파일 우선: 해당 문장 → 그 캐릭터 기본(manual) 녹음 → 기계 목소리
+  const chain=[]; if(key) chain.push(key); if(key!=='manual') chain.push('manual');
+  const tryNext=()=>{ const kk=chain.shift(); if(!kk){ tts(); return; } if(AUDIO_OK[k+kk]===false){ tryNext(); return; }
+    const a=new Audio(`voice_${k}_${kk}.mp3`); curAudio=a;
+    a.addEventListener('error',()=>{ AUDIO_OK[k+kk]=false; tryNext(); }); a.addEventListener('canplay',()=>{ AUDIO_OK[k+kk]=true; });
+    a.play().catch(()=>{ AUDIO_OK[k+kk]=false; tryNext(); }); };
+  tryNext(); }catch(e){} }
 function th(){ return Object.assign({},DEF_TH,S.th||{}); }
 function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; if(x.voiceOn==null) x.voiceOn=true; x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
 let S=load();
@@ -668,13 +677,13 @@ $('#dpSave').addEventListener('click',()=>{
 // ---------- settings ----------
 $('#saveSet').addEventListener('click',()=>{ S.name=$('#name').value.trim()||'친구'; S.budget=Number($('#budget').value)||0; S.goal=$('#goal').value.trim(); S.goalAmt=Number($('#goalAmt').value)||0; S.payday=Math.min(31,Math.max(1,Number($('#payday').value)||25)); save(); render(); toast('저장했어'); });
 $('#saveTh').addEventListener('click',()=>{ S.th={night:Math.min(90,Math.max(10,Number($('#thNight').value)||50)),repeat:Math.min(7,Math.max(2,Number($('#thRepeat').value)||3)),budget:Math.min(100,Math.max(50,Number($('#thBudget').value)||80))}; save(); render(); toast(`내 기준으로 바꿨어 · 야간 ${S.th.night}% · 반복 ${S.th.repeat}회 · 예산 ${S.th.budget}%`); });
-$('#voiceToggle').addEventListener('click',()=>{ S.voiceOn=!S.voiceOn; save(); render(); if(S.voiceOn) speak(tone().manual); else { try{speechSynthesis.cancel();}catch(e){} } toast(S.voiceOn?'이제 소리로도 말할게':'소리는 껐어'); });
-$('#voiceTest').addEventListener('click',()=>{ const t=tone(); if(!S.voiceOn){ S.voiceOn=true; save(); render(); } speak(t.manual); });
+$('#voiceToggle').addEventListener('click',()=>{ S.voiceOn=!S.voiceOn; save(); render(); if(S.voiceOn) speak(tone().manual,'manual'); else { try{speechSynthesis.cancel();}catch(e){} } toast(S.voiceOn?'이제 소리로도 말할게':'소리는 껐어'); });
+$('#voiceTest').addEventListener('click',()=>{ const t=tone(); if(!S.voiceOn){ S.voiceOn=true; save(); render(); } speak(t.manual,'manual'); });
 $('#chars').addEventListener('click',e=>{ const b=e.target.closest('.ch'); if(!b) return; const k=b.dataset.k, t=TONES[k]; const act=e.target.closest('[data-act]')?.dataset.act;
   if(!S.owned.includes(k)){
-    if(act==='preview'||!act){ toast(`${t.em} ${t.name}: “${t.manual}”`); const keep=S.tone; S.tone=k; speak(t.manual); S.tone=keep; return; }
+    if(act==='preview'||!act){ toast(`${t.em} ${t.name}: “${t.manual}”`); const keep=S.tone; S.tone=k; speak(t.manual,'manual'); S.tone=keep; return; }
     if((S.coins||0)<t.price){ toast(`코인이 ${t.price-(S.coins||0)}개 모자라. 3초만 더 참아 봐`); return; } S.coins-=t.price; S.owned.push(k); toast(`${t.name} 열었어!`); }
-  S.tone=k; save(); render(); toast(`${t.em} ${t.name}: “${t.manual}”`); speak(t.manual); setTimeout(()=>{ $$('.tab')[0].click(); },900); });
+  S.tone=k; save(); render(); toast(`${t.em} ${t.name}: “${t.manual}”`); speak(t.manual,'manual'); setTimeout(()=>{ $$('.tab')[0].click(); },900); });
 $('#demoReset').addEventListener('click',()=>{ S=migrate(sample()); save(); clockOffset=0; render(); toast('샘플 데이터로 되돌렸어'); });
 $('#demoNow').addEventListener('click',()=>{ clockOffset=0; tick(); toast('실제 시각으로 돌아왔어'); });
 
@@ -692,15 +701,15 @@ function openLock(kind){
   const nonTx=S.tx.filter(t=>!ESSENTIAL[t.cat]); const avg=nonTx.length?Math.round(nonTx.reduce((s,t)=>s+t.amt,0)/nonTx.length/100)*100:5000;
   $('#lockAmt').value=avg;
   S.brShown++; save();
-  speak($('#lockBig').textContent);
+  speak($('#lockBig').textContent, kind==='night'?'night':kind==='manual'?'manual':'pattern');
   $('#lock').hidden=false; let n=3; const ce=$('#count'); ce.textContent=n; ce.classList.remove('go'); $('#buyBtn').disabled=true;
   clearInterval(cnt); cnt=setInterval(()=>{ n--; if(n<=0){ clearInterval(cnt); ce.textContent='✓'; ce.classList.add('go'); $('#buyBtn').disabled=false; } else ce.textContent=n; },1000);
 }
 $('#holdBtn').addEventListener('click',()=>{ clearInterval(cnt); S.brHeld++; S.coins=(S.coins||0)+1; const a=Number($('#lockAmt').value)||0; S.brSaved=(S.brSaved||0)+a; save(); $('#lock').hidden=true; render();
   $$('.tab')[0].click(); ['#stHeld','#stSaved'].forEach(s=>{ const el=$(s); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
-  const hs=tone().hold(a?fmt(a):0); toast(hs+' · 코인 +1'); speak(hs); });
+  const hs=tone().hold(a?fmt(a):0); toast(hs+' · 코인 +1'); speak(hs,'hold'); });
 $('#manualBrake').addEventListener('click',()=>openLock('manual'));
-$('#buyBtn').addEventListener('click',()=>{ clearInterval(cnt); $('#lock').hidden=true; render(); toast(tone().buy); $$('.tab')[1].click(); });
+$('#buyBtn').addEventListener('click',()=>{ clearInterval(cnt); $('#lock').hidden=true; render(); toast(tone().buy); speak(tone().buy,'buy'); $$('.tab')[1].click(); });
 $('#demoNight').addEventListener('click',()=>{ const d=new Date(); d.setHours(22,14,0,0); clockOffset=d.getTime()-Date.now(); tick(); openLock('night'); });
 $('#demoPattern').addEventListener('click',()=>{ const d=new Date(); d.setHours(16,20,0,0); clockOffset=d.getTime()-Date.now(); tick(); openLock('pattern'); });
 
