@@ -31,9 +31,10 @@
   --night:#A48DFF; --night-soft:#2A2347; --shadow:0 2px 14px rgba(0,0,0,.35); color-scheme:dark }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
 .app{max-width:430px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-inline:16px;padding-block:12px 90px}
 h1,h2,h3{margin:0;text-wrap:balance}
+.brake .title,.widget .big,.sheet h2,.risk .txt b{text-wrap:balance}
 h2{font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:-.01em}
 h3{font-size:14px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
@@ -182,6 +183,10 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 .ch .em{font-size:26px;line-height:1}
 .ch .nm{font-weight:700;font-size:14px;margin-top:4px}
 .ch .sm{font-size:11px;color:var(--sub)}
+.ch .ex{font-size:12px;color:var(--fg);margin-top:6px;padding:6px 8px;background:var(--bg);border-radius:8px;line-height:1.35}
+.ch .acts{display:flex;gap:6px;margin-top:8px}
+.ch .acts button{flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:6px 4px;font-size:11px;font-weight:700;font-family:var(--body);color:var(--fg);cursor:pointer}
+.ch .acts button.un{background:var(--warn);border-color:var(--warn);color:#fff}
 .ch .pr{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--warn-soft);color:var(--warn)}
 .ch.on .pr{background:var(--accent-soft);color:var(--accent)}
 .coinbar{display:flex;justify-content:space-between;align-items:center;background:var(--warn-soft);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:10px}
@@ -209,7 +214,7 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
   <section class="screen" id="s-home">
     <!-- 3초 브레이크 카드: 이 앱의 정체성. 통계보다 먼저 보인다 -->
     <div class="brake" id="brakeCard">
-      <div class="head"><span>3초 브레이크</span><span class="status" id="brStatus"><span class="d"></span><span id="brStatusTxt">대기 중</span></span></div>
+      <div class="head"><span id="brWho">3초 브레이크</span><span class="status" id="brStatus"><span class="d"></span><span id="brStatusTxt">대기 중</span></span></div>
       <div class="title" id="brTitle">사기 전에 3초, 내가 먼저 멈춘다</div>
       <div class="sub" id="brSub">밤 10시가 넘거나 반복 패턴이 보이면 내가 먼저 말 걸게. 그 전엔 네가 눌러도 돼.</div>
       <div class="stats">
@@ -332,9 +337,10 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 
     <div class="card">
       <h3 style="margin-bottom:8px">내 지킴이 캐릭터 · 말투</h3>
-      <div class="coinbar"><span>지킴 코인 <span class="note">3초 참을 때마다 1개 · 현금화 안 돼, 여기서만 써</span></span><b id="coinTxt">0</b></div>
+      <div class="coinbar"><span>지킴 코인 <span class="note" id="coinNote">3초 참을 때마다 1개, 용돈 남기면 보너스 · 현금화 안 돼</span></span><b id="coinTxt">0</b></div>
       <div class="chars" id="chars"></div>
-      <p class="note" style="margin:8px 0 0">고른 캐릭터 말투로 3초 브레이크 팝업과 코칭 문구가 바뀌어. 코인으로 새 캐릭터를 열 수 있어.</p>
+      <div class="row" style="margin-top:10px"><button class="btn small ghost" id="voiceToggle">🔊 목소리 켬</button><button class="btn small ghost" id="voiceTest">🎧 들어보기</button></div>
+      <p class="note" style="margin:8px 0 0">고르면 <b>홈 3초 브레이크 카드 제목, 코칭 말풍선, 브레이크 팝업 문구</b>가 그 캐릭터 말투로 바뀌어. 코인으로 새 캐릭터를 열 수 있어.</p>
     </div>
 
     <div class="card">
@@ -414,23 +420,26 @@ const KEY='wallet-keeper-v1';
 const WHYS=[['need','필요해서'],['event','1+1 · 행사'],['friend','친구 따라'],['bored','심심해서'],['mood','기분 전환']];
 const WHYNAME=Object.fromEntries(WHYS);
 const TONES={
-  friend:{name:'찐친 지지',em:'😎',price:0,desc:'친구가 툭 던지는 반말',
+  friend:{name:'찐친 지지',em:'😎',price:0,voice:{pitch:1.0,rate:1.05},desc:'친구가 툭 던지는 반말',
     night:'밤 10시 넘었어. 지금은 충동 소비 시간대야.',manual:'잠깐. 지금 사려는 거, 3초 뒤에도 필요해?',pattern:c=>`오늘도 ${c} 갈 확률 높아. 3초만 생각하고 가자.`,
     hold:a=>a?`잘 참았어. ${a}원 지켰어`:'잘 참았어. 성공률에 기록했어',buy:'알겠어. 결제하면 기록에 적어 줘',wrap:m=>m},
-  senior:{name:'다정한 선배',em:'🌙',price:0,desc:'부드럽게 다독이는 말투',
+  senior:{name:'다정한 선배',em:'🌙',price:0,voice:{pitch:0.85,rate:0.9},desc:'부드럽게 다독이는 말투',
     night:'밤 10시가 넘었네. 이 시간엔 마음이 먼저 움직여.',manual:'잠깐만. 3초 뒤에도 갖고 싶을까? 천천히 생각해 보자.',pattern:c=>`오늘도 ${c}에 가고 싶지? 괜찮아, 3초만 같이 생각하자.`,
     hold:a=>a?`잘했어. ${a}원을 지켰네, 대단해`:'잘했어. 네가 고른 거야',buy:'그래, 네 선택이야. 기록만 남겨 두자',wrap:m=>m+' 괜찮아, 알고 쓰는 게 중요해.'},
-  cheer:{name:'응원단장',em:'📣',price:5,desc:'느낌표 가득 파이팅',
+  cheer:{name:'응원단장',em:'📣',price:5,voice:{pitch:1.25,rate:1.2},desc:'느낌표 가득 파이팅',
     night:'밤 10시! 여기서 멈추면 오늘 경기 승리!',manual:'3초 타임아웃! 이거 진짜 필요한지 작전 타임!',pattern:c=>`${c} 이번 주 세 번째! 오늘은 패스하고 한 골 넣자!`,
     hold:a=>a?`나이스 세이브! ${a}원 지켰다!`:'나이스 세이브!',buy:'오케이! 결제 기록 잊지 마!',wrap:m=>m+' 파이팅!'},
-  cat:{name:'츤데레 고양이',em:'🐱',price:8,desc:'퉁명한데 챙겨 주는 말투',
+  cat:{name:'츤데레 고양이',em:'🐱',price:8,voice:{pitch:1.4,rate:1.0},desc:'퉁명한데 챙겨 주는 말투',
     night:'...밤 10시잖아. 또 사게? 흥, 3초만 참아 봐.',manual:'3초. 그거 없어도 안 죽어. 아마도.',pattern:c=>`${c} 또? 이번 주 세 번째인 거 알지. 3초.`,
     hold:a=>a?`...${a}원 지켰네. 뭐, 나쁘지 않아.`:'...뭐, 잘했어.',buy:'마음대로 해. 기록은 하고.',wrap:m=>'흥. '+m}
 };
 const DEF_TH={night:50,repeat:3,budget:80};
 function tone(){ return TONES[S.tone]||TONES.friend; }
+function speak(text){ try{ if(!S.voiceOn||!('speechSynthesis' in window)) return; const t=tone(); speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(String(text).replace(/[*_]/g,'')); u.lang='ko-KR'; u.pitch=t.voice.pitch; u.rate=t.voice.rate;
+  const v=speechSynthesis.getVoices().find(x=>x.lang&&x.lang.replace('_','-').startsWith('ko')); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){} }
 function th(){ return Object.assign({},DEF_TH,S.th||{}); }
-function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
+function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; if(x.voiceOn==null) x.voiceOn=true; x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
 let S=load();
 let clockOffset=0; // ms offset for demo clock
 
@@ -445,7 +454,7 @@ function sample(){
   const base=new Date(); base.setHours(12,0,0,0);
   const d=(days,h,m)=>{ const t=new Date(base); t.setDate(t.getDate()-days); t.setHours(h,m||0,0,0); return t.toISOString(); };
   return {
-    name:'아린', budget:100000, goal:'콘서트 티켓', goalAmt:120000, brShown:7, brHeld:4, brSaved:21500, coins:4, tone:'friend', owned:['friend','senior'], th:{night:50,repeat:3,budget:80}, payday:25,
+    name:'아린', budget:100000, goal:'콘서트 티켓', goalAmt:120000, brShown:7, brHeld:4, brSaved:21500, coins:9, bonusCoins:5, tone:'friend', owned:['friend','senior'], th:{night:50,repeat:3,budget:80}, payday:25, voiceOn:true,
     tx:[
       {id:1,amt:4500,item:'카페 라떼',cat:'cafe',at:d(1,16,30),regret:null},
       {id:2,amt:6800,item:'편의점 야식',cat:'snack',at:d(1,22,40),regret:'regret',why:'bored'},
@@ -520,6 +529,7 @@ function render(){
   $('#ddayTxt').textContent=`D-${m.dday}`; $('#perDay').textContent=fmt(m.perDay)+'원';
   const T=th(), tn=tone();
   $$('.coach .av').forEach(a=>a.textContent=tn.em);
+  $('#brWho').textContent=`${tn.em} ${tn.name}의 3초 브레이크`;
   const g=$('#gauge'); g.style.setProperty('--p',m.risk); g.style.setProperty('--gc',m.risk>=60?'var(--bad)':m.risk>=35?'var(--warn)':'var(--good)');
   $('#riskPct').textContent=m.risk+'%';
   $('#riskTitle').textContent=m.risk>=60?'충동 소비 위험 높음':m.risk>=35?'충동 소비 주의':'충동 소비 위험 낮음';
@@ -534,7 +544,7 @@ function render(){
   else if(m.F>=T.repeat) hc=`${CATNAME[m.Fcat].slice(2)} 카테고리를 이번 주 <b>${m.F}번</b> 샀어. 하교 길 패턴이 보이는데, 내일 4시쯤 한 번 물어볼게.`;
   else if(m.M1>=T.budget) hc=`예산을 <b>${Math.round(m.M1)}%</b> 썼어. 남은 날엔 필수 소비만 하면 월말 넘길 수 있어.`;
   else hc=`지금까진 괜찮아. 비필수 소비 <b>${Math.round(m.M2)}%</b>만 신경 쓰자.`;
-  $('#homeCoach').innerHTML=hc;
+  $('#homeCoach').innerHTML=`<b>${tn.name}</b> · `+tn.wrap(hc);
   // tx list
   const L=$('#txlist'); L.innerHTML='';
   if(!m.tx.length){ L.innerHTML='<div class="empty">아직 기록이 없어. ➕에서 첫 소비를 적어 봐.</div>'; }
@@ -572,10 +582,11 @@ function render(){
   ws.forEach(([w,b])=>{ const p=Math.round(b.r/b.n*100); const el=document.createElement('div'); el.className='reason'; el.innerHTML=`<span>${WHYNAME[w]} <span class="note">${b.n}건 중 ${b.r}건 후회</span></span><span class="pct ${p>=50?'hi':p<=20?'lo':''}">${p}%</span>`; RZ.appendChild(el); });
   $('#reasonNote').textContent=ws.length&&ws[0][1].r/ws[0][1].n>=.5?`'${WHYNAME[ws[0][0]]}'로 산 건 ${Math.round(ws[0][1].r/ws[0][1].n*100)}% 후회했어. 다음엔 이 이유일 때 3초 브레이크가 먼저 물어볼게.`:'후회가 몰리는 이유가 생기면 그때 먼저 말 걸게.';
   // coins & characters
-  $('#coinTxt').textContent=S.coins||0;
+  $('#coinTxt').textContent=S.coins||0; if(S.bonusCoins) $('#coinNote').textContent=`참기 ${S.brHeld}개 + 지난달 남긴 용돈 보너스 ${S.bonusCoins}개 · 현금화 안 돼`;
   const CH=$('#chars'); CH.innerHTML='';
   Object.entries(TONES).forEach(([k,t])=>{ const owned=S.owned.includes(k), on=S.tone===k; const b=document.createElement('button'); b.type='button'; b.className='ch'+(on?' on':'')+(owned?'':' locked'); b.dataset.k=k;
-    b.innerHTML=`<div class="em">${t.em}</div><div class="nm">${t.name}</div><div class="sm">${t.desc}</div><span class="pr">${on?'사용 중':owned?'보유':'🔒 코인 '+t.price+'개'}</span>`; CH.appendChild(b); });
+    b.innerHTML=`<div class="em">${t.em}</div><div class="nm">${t.name}</div><div class="sm">${t.desc}</div><div class="ex">“${t.manual}”</div>`+(owned?`<span class="pr">${on?'사용 중':'보유'}</span>`:`<span class="pr">🔒 코인 ${t.price}개</span><div class="acts"><button type="button" data-act="preview">🎧 듣기</button><button type="button" class="un" data-act="unlock">코인 ${t.price}개로 열기</button></div>`); CH.appendChild(b); });
+  $('#voiceToggle').textContent=S.voiceOn?'🔊 목소리 켬':'🔇 목소리 끔';
   $('#thNight').value=T.night; $('#thRepeat').value=T.repeat; $('#thBudget').value=T.budget; $('#payday').value=S.payday||25;
   // brake card (home top)
   const saved=S.brSaved||0, nowD=now(), nightNow=isNight(nowD);
@@ -635,7 +646,7 @@ $('#save').addEventListener('click',()=>{
   $('#cTitle').textContent=`${item} ${fmt(amt)}원 기록 완료`;
   $('#cSub').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())} · ${CATNAME[cat].slice(2)}`+(t.why?` · ${WHYNAME[t.why]}`:'');
   $('#cStats').innerHTML=`<div class="stat"><span>야간 구매 비율</span><b>${Math.round(m.R)}%</b></div><div class="stat"><span>이번 주 같은 카테고리</span><b>${S.tx.filter(x=>x.cat===cat&&now()-new Date(x.at)<=7*864e5).length}회</b></div><div class="stat"><span>예산 사용률</span><b>${Math.round(m.M1)}%</b></div><div class="stat"><span>비필수 소비 비중</span><b>${Math.round(m.M2)}%</b></div>`;
-  $('#cMsg').textContent=c.msg;
+  $('#cMsg').textContent=c.msg; speak(c.msg);
   $('#amount').value=''; $('#item').value=''; $('#when').value=''; why=null; $$('#whys .chip').forEach(x=>x.classList.remove('on'));
   render(); $('#coachSheet').hidden=false;
 });
@@ -657,9 +668,13 @@ $('#dpSave').addEventListener('click',()=>{
 // ---------- settings ----------
 $('#saveSet').addEventListener('click',()=>{ S.name=$('#name').value.trim()||'친구'; S.budget=Number($('#budget').value)||0; S.goal=$('#goal').value.trim(); S.goalAmt=Number($('#goalAmt').value)||0; S.payday=Math.min(31,Math.max(1,Number($('#payday').value)||25)); save(); render(); toast('저장했어'); });
 $('#saveTh').addEventListener('click',()=>{ S.th={night:Math.min(90,Math.max(10,Number($('#thNight').value)||50)),repeat:Math.min(7,Math.max(2,Number($('#thRepeat').value)||3)),budget:Math.min(100,Math.max(50,Number($('#thBudget').value)||80))}; save(); render(); toast(`내 기준으로 바꿨어 · 야간 ${S.th.night}% · 반복 ${S.th.repeat}회 · 예산 ${S.th.budget}%`); });
-$('#chars').addEventListener('click',e=>{ const b=e.target.closest('.ch'); if(!b) return; const k=b.dataset.k, t=TONES[k];
-  if(!S.owned.includes(k)){ if((S.coins||0)<t.price){ toast(`코인이 ${t.price-(S.coins||0)}개 모자라. 3초만 더 참아 봐`); return; } S.coins-=t.price; S.owned.push(k); toast(`${t.name} 열었어!`); }
-  S.tone=k; save(); render(); toast(`이제 ${t.em} ${t.name} 말투로 말 걸게`); });
+$('#voiceToggle').addEventListener('click',()=>{ S.voiceOn=!S.voiceOn; save(); render(); if(S.voiceOn) speak(tone().manual); else { try{speechSynthesis.cancel();}catch(e){} } toast(S.voiceOn?'이제 소리로도 말할게':'소리는 껐어'); });
+$('#voiceTest').addEventListener('click',()=>{ const t=tone(); if(!S.voiceOn){ S.voiceOn=true; save(); render(); } speak(t.manual); });
+$('#chars').addEventListener('click',e=>{ const b=e.target.closest('.ch'); if(!b) return; const k=b.dataset.k, t=TONES[k]; const act=e.target.closest('[data-act]')?.dataset.act;
+  if(!S.owned.includes(k)){
+    if(act==='preview'||!act){ toast(`${t.em} ${t.name}: “${t.manual}”`); const keep=S.tone; S.tone=k; speak(t.manual); S.tone=keep; return; }
+    if((S.coins||0)<t.price){ toast(`코인이 ${t.price-(S.coins||0)}개 모자라. 3초만 더 참아 봐`); return; } S.coins-=t.price; S.owned.push(k); toast(`${t.name} 열었어!`); }
+  S.tone=k; save(); render(); toast(`${t.em} ${t.name}: “${t.manual}”`); speak(t.manual); setTimeout(()=>{ $$('.tab')[0].click(); },900); });
 $('#demoReset').addEventListener('click',()=>{ S=migrate(sample()); save(); clockOffset=0; render(); toast('샘플 데이터로 되돌렸어'); });
 $('#demoNow').addEventListener('click',()=>{ clockOffset=0; tick(); toast('실제 시각으로 돌아왔어'); });
 
@@ -677,12 +692,13 @@ function openLock(kind){
   const nonTx=S.tx.filter(t=>!ESSENTIAL[t.cat]); const avg=nonTx.length?Math.round(nonTx.reduce((s,t)=>s+t.amt,0)/nonTx.length/100)*100:5000;
   $('#lockAmt').value=avg;
   S.brShown++; save();
+  speak($('#lockBig').textContent);
   $('#lock').hidden=false; let n=3; const ce=$('#count'); ce.textContent=n; ce.classList.remove('go'); $('#buyBtn').disabled=true;
   clearInterval(cnt); cnt=setInterval(()=>{ n--; if(n<=0){ clearInterval(cnt); ce.textContent='✓'; ce.classList.add('go'); $('#buyBtn').disabled=false; } else ce.textContent=n; },1000);
 }
 $('#holdBtn').addEventListener('click',()=>{ clearInterval(cnt); S.brHeld++; S.coins=(S.coins||0)+1; const a=Number($('#lockAmt').value)||0; S.brSaved=(S.brSaved||0)+a; save(); $('#lock').hidden=true; render();
   $$('.tab')[0].click(); ['#stHeld','#stSaved'].forEach(s=>{ const el=$(s); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
-  toast(tone().hold(a?fmt(a):0)+' · 코인 +1'); });
+  const hs=tone().hold(a?fmt(a):0); toast(hs+' · 코인 +1'); speak(hs); });
 $('#manualBrake').addEventListener('click',()=>openLock('manual'));
 $('#buyBtn').addEventListener('click',()=>{ clearInterval(cnt); $('#lock').hidden=true; render(); toast(tone().buy); $$('.tab')[1].click(); });
 $('#demoNight').addEventListener('click',()=>{ const d=new Date(); d.setHours(22,14,0,0); clockOffset=d.getTime()-Date.now(); tick(); openLock('night'); });
@@ -693,6 +709,7 @@ try{ const d=new Date(); if(isNight(d)&&!sessionStorage.getItem('night-shown')){
 
 let tt; function toast(s){ const t=$('#toast'); t.textContent=s; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,2200); }
 
+try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
 render();
 })();
 </script>
