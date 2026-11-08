@@ -175,6 +175,27 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 .widget .amtrow{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13px}
 .widget .amtrow input{flex:1;min-width:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:12px;padding:9px 12px;font-size:16px;font-family:var(--display)}
 .widget .amtrow input::placeholder{color:rgba(255,255,255,.5)}
+/* 테마 (코인 상점) */
+:root[data-skin="mint"]{--accent:#0FA98E;--accent-soft:#DDF5EF;--night:#2F7F6F;--night-soft:#E3F2EE}
+:root[data-skin="lavender"]{--accent:#7A5AF8;--accent-soft:#ECE7FE;--night:#5B3FD6;--night-soft:#EDE8FB}
+:root[data-skin="sunset"]{--accent:#F0603C;--accent-soft:#FDE7E0;--night:#B9402A;--night-soft:#FBE6E0}
+:root[data-skin="mint"] .budget{background:linear-gradient(135deg,#0FA98E,#0B7A66)}
+:root[data-skin="lavender"] .budget{background:linear-gradient(135deg,#7A5AF8,#4E35C9)}
+:root[data-skin="sunset"] .budget{background:linear-gradient(135deg,#F0603C,#C73C1E)}
+:root[data-bg="dots"] body{background-image:radial-gradient(var(--line) 1.2px,transparent 1.2px);background-size:18px 18px}
+:root[data-bg="grid"] body{background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:26px 26px}
+:root[data-bg="stars"] .brake{background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.25) 1.5px,transparent 2px),radial-gradient(circle at 70% 60%,rgba(255,255,255,.2) 1.5px,transparent 2px),radial-gradient(circle at 40% 80%,rgba(255,255,255,.2) 1px,transparent 1.5px),radial-gradient(circle at 85% 20%,rgba(255,255,255,.25) 1px,transparent 1.5px),linear-gradient(135deg,#2B2A5E,#0B0E1F)}
+.shop{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.it{border:1.5px solid var(--line);border-radius:14px;padding:10px 8px;background:var(--card);cursor:pointer;text-align:center;font-family:var(--body);color:var(--fg)}
+.it.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.it .sw{width:100%;height:28px;border-radius:8px;margin-bottom:6px}
+.it .nm{font-size:12px;font-weight:700}
+.it .pr{display:inline-block;margin-top:4px;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--warn-soft);color:var(--warn)}
+.it.on .pr{background:var(--accent-soft);color:var(--accent)}
+.howto{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.howto div{background:var(--bg);border-radius:12px;padding:10px 8px;text-align:center}
+.howto b{display:block;font-family:var(--display);font-size:18px;color:var(--warn)}
+.howto span{font-size:11px;color:var(--sub);line-height:1.3;display:block}
 /* 캐릭터 선택, 기준값, 이유 칩 */
 .chars{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ch{border:1.5px solid var(--line);border-radius:14px;padding:10px;background:var(--card);cursor:pointer;text-align:left;font-family:var(--body);color:var(--fg)}
@@ -344,6 +365,24 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--a
     </div>
 
     <div class="card">
+      <h3 style="margin-bottom:8px">지킴 코인 · 어떻게 모으고, 어디에 써?</h3>
+      <div class="coinbar"><span>지금 내 코인</span><b id="coinTxt2">0</b></div>
+      <div class="howto">
+        <div><b>+1</b><span>3초 브레이크에서<br>'오늘은 참을래'</span></div>
+        <div><b>+1 / 만원</b><span>용돈 받는 날<br>남은 용돈 1만원마다 (최대 5)</span></div>
+        <div><b>+3</b><span>월말 후회 지수<br>20% 이하</span></div>
+      </div>
+      <p class="note" style="margin:8px 0 10px">현금으로 못 바꿔. 대신 아래 상점에서 내 앱을 꾸밀 수 있어. 코인 쓰는 즐거움이 '참는 재미'가 되게 만든 거야.</p>
+      <h3 style="margin-bottom:6px">코인 상점 · 테마 색</h3>
+      <div class="shop" id="shopSkin"></div>
+      <h3 style="margin:12px 0 6px">코인 상점 · 홈 배경</h3>
+      <div class="shop" id="shopBg"></div>
+      <h3 style="margin:12px 0 6px">코인 상점 · 참았을 때 효과음</h3>
+      <div class="shop" id="shopSfx"></div>
+      <p class="note" style="margin:8px 0 0">캐릭터 목소리는 위 '내 지킴이 캐릭터'에서. 배경 음악, 꾸미기 아이템 추가는 다음 단계.</p>
+    </div>
+
+    <div class="card">
       <h3 style="margin-bottom:8px">내 기준값 (위험 판단 기준)</h3>
       <div class="th">
         <div><input type="number" id="thNight" inputmode="numeric" min="10" max="90" step="5"><div class="l">야간 비율 % 넘으면 위험</div></div>
@@ -421,19 +460,34 @@ const WHYS=[['need','필요해서'],['event','1+1 · 행사'],['friend','친구 
 const WHYNAME=Object.fromEntries(WHYS);
 const TONES={
   friend:{name:'찐친 지지',em:'😎',price:0,voice:{pitch:1.0,rate:1.1,vi:0},desc:'친구가 툭 던지는 반말',
-    night:'밤 10시 넘었어. 지금은 충동 소비 시간대야.',manual:'잠깐. 지금 사려는 거, 3초 뒤에도 필요해?',pattern:c=>`오늘도 ${c} 갈 확률 높아. 3초만 생각하고 가자.`,
+    night:'밤 10시 넘었어. 지금은 충동 소비 시간대야.',manual:'잠깐! 지금 사려는 거, 3초 뒤에도 필요해? 아닐걸?',pattern:c=>`오늘도 ${c} 갈 확률 높아. 3초만 생각하고 가자.`,
     hold:a=>a?`잘 참았어. ${a}원 지켰어`:'잘 참았어. 성공률에 기록했어',buy:'알겠어. 결제하면 기록에 적어 줘',wrap:m=>m},
   senior:{name:'다정한 선배',em:'🌙',price:0,voice:{pitch:0.6,rate:0.8,vi:1},desc:'부드럽게 다독이는 말투',
-    night:'밤 10시가 넘었네. 이 시간엔 마음이 먼저 움직여.',manual:'잠깐만. 3초 뒤에도 갖고 싶을까? 천천히 생각해 보자.',pattern:c=>`오늘도 ${c}에 가고 싶지? 괜찮아, 3초만 같이 생각하자.`,
+    night:'밤 10시가 넘었네. 이 시간엔 마음이 먼저 움직여.',manual:'잠깐만. 3초 뒤에도 갖고 싶을까? 천천히 생각해 보자.',pattern:c=>`오늘도 ${c} 가고 싶지? 우리 3초만 고민하고 가자~`,
     hold:a=>a?`잘했어. ${a}원을 지켰네, 대단해`:'잘했어. 네가 고른 거야',buy:'그래, 네 선택이야. 기록만 남겨 두자',wrap:m=>m+' 괜찮아, 알고 쓰는 게 중요해.'},
   cheer:{name:'응원단장',em:'📣',price:5,voice:{pitch:1.7,rate:1.35,vi:2},desc:'느낌표 가득 파이팅',
-    night:'밤 10시! 여기서 멈추면 오늘 경기 승리!',manual:'3초 타임아웃! 이거 진짜 필요한지 작전 타임!',pattern:c=>`${c} 이번 주 세 번째! 오늘은 패스하고 한 골 넣자!`,
+    night:'밤 10시!! 여기서 멈추고 안 사면 용돈 세이브!!!',manual:'3초 타임아웃! 이거 진짜 필요한지 작전 타임!',pattern:c=>`${c} 이번 주 세 번째! 오늘은 패스하고 한 골 넣자!`,
     hold:a=>a?`나이스 세이브! ${a}원 지켰다!`:'나이스 세이브!',buy:'오케이! 결제 기록 잊지 마!',wrap:m=>m+' 파이팅!'},
   cat:{name:'츤데레 고양이',em:'🐱',price:8,voice:{pitch:1.9,rate:0.95,vi:3},desc:'퉁명한데 챙겨 주는 말투',
     night:'...밤 10시잖아. 또 사게? 흥, 3초만 참아 봐.',manual:'3초. 그거 없어도 안 죽어. 아마도.',pattern:c=>`${c} 또? 이번 주 세 번째인 거 알지. 3초.`,
     hold:a=>a?`...${a}원 지켰네. 뭐, 나쁘지 않아.`:'...뭐, 잘했어.',buy:'마음대로 해. 기록은 하고.',wrap:m=>'흥. '+m}
 };
 const DEF_TH={night:50,repeat:3,budget:80};
+const SHOP={
+  skin:[['blue','기본 파랑',0,'linear-gradient(135deg,#2F6FED,#1C4FC0)'],['mint','민트',3,'linear-gradient(135deg,#0FA98E,#0B7A66)'],['lavender','라벤더',3,'linear-gradient(135deg,#7A5AF8,#4E35C9)'],['sunset','선셋',4,'linear-gradient(135deg,#F0603C,#C73C1E)']],
+  bg:[['plain','기본',0,'#F3F6FB'],['dots','도트',2,'radial-gradient(#C9D2E3 1.5px,transparent 1.5px) 0 0/10px 10px,#F3F6FB'],['grid','모눈',2,'linear-gradient(#C9D2E3 1px,transparent 1px) 0 0/12px 12px,linear-gradient(90deg,#C9D2E3 1px,transparent 1px) 0 0/12px 12px,#F3F6FB'],['stars','별밤 카드',3,'radial-gradient(circle at 30% 40%,#fff 1.5px,transparent 2px),radial-gradient(circle at 70% 70%,#fff 1px,transparent 1.5px),linear-gradient(135deg,#2B2A5E,#0B0E1F)']],
+  sfx:[['none','소리 없음',0,'#EEF2FA'],['ding','딩동',1,'#FFF1DC'],['coin','동전',2,'#FFF1DC'],['fanfare','팡파르',3,'#FFF1DC']]
+};
+function migrateShop(x){ if(!x.skin) x.skin='blue'; if(!x.bg) x.bg='plain'; if(!x.sfx) x.sfx='ding'; if(!x.items) x.items=['blue','plain','none','ding']; return x; }
+function applySkin(){ const r=document.documentElement; r.setAttribute('data-skin',S.skin||'blue'); r.setAttribute('data-bg',S.bg||'plain'); }
+let AC=null;
+function sfx(){ try{ const k=S.sfx||'none'; if(k==='none') return; AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const t0=AC.currentTime;
+  const beep=(f,st,dur,type='sine',g=.18)=>{ const o=AC.createOscillator(), gn=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t0+st); gn.gain.setValueAtTime(0,t0+st); gn.gain.linearRampToValueAtTime(g,t0+st+.01); gn.gain.exponentialRampToValueAtTime(.0001,t0+st+dur); o.connect(gn).connect(AC.destination); o.start(t0+st); o.stop(t0+st+dur+.02); };
+  if(k==='ding'){ beep(880,0,.25); beep(1320,.12,.35); }
+  else if(k==='coin'){ beep(1568,0,.08,'square',.12); beep(2093,.08,.3,'square',.12); }
+  else if(k==='fanfare'){ [523,659,784,1047].forEach((f,i)=>beep(f,i*.11,.22,'triangle',.2)); beep(1047,.5,.5,'triangle',.22); } }catch(e){} }
+function paydayBonus(){ try{ const d=now(); const ym=d.getFullYear()+'-'+(d.getMonth()+1); if(S.lastBonusYm===ym) return; if(d.getDate()<(S.payday||25)) return;
+  const m=metrics(); const b=Math.min(5,Math.floor(Math.max(0,m.remain)/10000)); S.lastBonusYm=ym; if(b>0){ S.coins=(S.coins||0)+b; S.bonusCoins=(S.bonusCoins||0)+b; } save(); if(b>0) toast(`용돈 ${fmt(m.remain)}원 남겼어! 🪙 보너스 코인 +${b}`); }catch(e){} }
 function tone(){ return TONES[S.tone]||TONES.friend; }
 const AUDIO_OK={}; let curAudio=null;
 function speak(text,key){ try{ if(!S.voiceOn) return; const t=tone(), k=S.tone;
@@ -448,7 +502,7 @@ function speak(text,key){ try{ if(!S.voiceOn) return; const t=tone(), k=S.tone;
     a.play().catch(()=>{ AUDIO_OK[k+kk]=false; tryNext(); }); };
   tryNext(); }catch(e){} }
 function th(){ return Object.assign({},DEF_TH,S.th||{}); }
-function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; if(x.voiceOn==null) x.voiceOn=true; x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
+function migrate(x){ if(!x.tone) x.tone='friend'; if(!x.owned) x.owned=['friend','senior']; if(x.coins==null) x.coins=x.brHeld||0; if(!x.th) x.th=Object.assign({},DEF_TH); if(!x.payday) x.payday=25; if(x.voiceOn==null) x.voiceOn=true; migrateShop(x); x.tx.forEach(t=>{ if(!('why' in t)) t.why=null; }); return x; }
 let S=load();
 let clockOffset=0; // ms offset for demo clock
 
@@ -463,7 +517,7 @@ function sample(){
   const base=new Date(); base.setHours(12,0,0,0);
   const d=(days,h,m)=>{ const t=new Date(base); t.setDate(t.getDate()-days); t.setHours(h,m||0,0,0); return t.toISOString(); };
   return {
-    name:'아린', budget:100000, goal:'콘서트 티켓', goalAmt:120000, brShown:7, brHeld:4, brSaved:21500, coins:9, bonusCoins:5, tone:'friend', owned:['friend','senior'], th:{night:50,repeat:3,budget:80}, payday:25, voiceOn:true,
+    name:'아린', budget:100000, goal:'콘서트 티켓', goalAmt:120000, brShown:7, brHeld:4, brSaved:21500, coins:9, bonusCoins:5, tone:'friend', owned:['friend','senior'], th:{night:50,repeat:3,budget:80}, payday:25, voiceOn:true, skin:'blue', bg:'plain', sfx:'ding', items:['blue','plain','none','ding'], lastBonusYm:null,
     tx:[
       {id:1,amt:4500,item:'카페 라떼',cat:'cafe',at:d(1,16,30),regret:null},
       {id:2,amt:6800,item:'편의점 야식',cat:'snack',at:d(1,22,40),regret:'regret',why:'bored'},
@@ -591,7 +645,10 @@ function render(){
   ws.forEach(([w,b])=>{ const p=Math.round(b.r/b.n*100); const el=document.createElement('div'); el.className='reason'; el.innerHTML=`<span>${WHYNAME[w]} <span class="note">${b.n}건 중 ${b.r}건 후회</span></span><span class="pct ${p>=50?'hi':p<=20?'lo':''}">${p}%</span>`; RZ.appendChild(el); });
   $('#reasonNote').textContent=ws.length&&ws[0][1].r/ws[0][1].n>=.5?`'${WHYNAME[ws[0][0]]}'로 산 건 ${Math.round(ws[0][1].r/ws[0][1].n*100)}% 후회했어. 다음엔 이 이유일 때 3초 브레이크가 먼저 물어볼게.`:'후회가 몰리는 이유가 생기면 그때 먼저 말 걸게.';
   // coins & characters
-  $('#coinTxt').textContent=S.coins||0; if(S.bonusCoins) $('#coinNote').textContent=`참기 ${S.brHeld}개 + 지난달 남긴 용돈 보너스 ${S.bonusCoins}개 · 현금화 안 돼`;
+  $('#coinTxt').textContent=S.coins||0; $('#coinTxt2').textContent=S.coins||0; applySkin();
+  [['skin','shopSkin'],['bg','shopBg'],['sfx','shopSfx']].forEach(([cat,id])=>{ const box=$('#'+id); box.innerHTML='';
+    SHOP[cat].forEach(([k,n,pr,sw])=>{ const owned=S.items.includes(k), on=S[cat]===k; const b=document.createElement('button'); b.type='button'; b.className='it'+(on?' on':''); b.dataset.cat=cat; b.dataset.k=k;
+      b.innerHTML=`<div class="sw" style="background:${sw}"></div><div class="nm">${n}</div><span class="pr">${on?'사용 중':owned?'보유':'🪙 '+pr}</span>`; box.appendChild(b); }); }); if(S.bonusCoins) $('#coinNote').textContent=`참기 ${S.brHeld}개 + 용돈 남긴 보너스 ${S.bonusCoins}개 · 아래 상점에서도 써`;
   const CH=$('#chars'); CH.innerHTML='';
   Object.entries(TONES).forEach(([k,t])=>{ const owned=S.owned.includes(k), on=S.tone===k; const b=document.createElement('button'); b.type='button'; b.className='ch'+(on?' on':'')+(owned?'':' locked'); b.dataset.k=k;
     b.innerHTML=`<div class="em">${t.em}</div><div class="nm">${t.name}</div><div class="sm">${t.desc}</div><div class="ex">“${t.manual}”</div>`+(owned?`<span class="pr">${on?'사용 중':'보유'}</span>`:`<span class="pr">🔒 코인 ${t.price}개</span><div class="acts"><button type="button" data-act="preview">🎧 듣기</button><button type="button" class="un" data-act="unlock">코인 ${t.price}개로 열기</button></div>`); CH.appendChild(b); });
@@ -677,6 +734,9 @@ $('#dpSave').addEventListener('click',()=>{
 // ---------- settings ----------
 $('#saveSet').addEventListener('click',()=>{ S.name=$('#name').value.trim()||'친구'; S.budget=Number($('#budget').value)||0; S.goal=$('#goal').value.trim(); S.goalAmt=Number($('#goalAmt').value)||0; S.payday=Math.min(31,Math.max(1,Number($('#payday').value)||25)); save(); render(); toast('저장했어'); });
 $('#saveTh').addEventListener('click',()=>{ S.th={night:Math.min(90,Math.max(10,Number($('#thNight').value)||50)),repeat:Math.min(7,Math.max(2,Number($('#thRepeat').value)||3)),budget:Math.min(100,Math.max(50,Number($('#thBudget').value)||80))}; save(); render(); toast(`내 기준으로 바꿨어 · 야간 ${S.th.night}% · 반복 ${S.th.repeat}회 · 예산 ${S.th.budget}%`); });
+document.addEventListener('click',e=>{ const b=e.target.closest('.it'); if(!b) return; const cat=b.dataset.cat,k=b.dataset.k; const item=SHOP[cat].find(x=>x[0]===k); if(!item) return;
+  if(!S.items.includes(k)){ if((S.coins||0)<item[2]){ toast(`코인이 ${item[2]-(S.coins||0)}개 모자라. 3초만 더 참아 봐`); return; } S.coins-=item[2]; S.items.push(k); toast(`${item[1]} 열었어! 🪙 -${item[2]}`); }
+  S[cat]=k; save(); render(); if(cat==='sfx') sfx(); });
 $('#voiceToggle').addEventListener('click',()=>{ S.voiceOn=!S.voiceOn; save(); render(); if(S.voiceOn) speak(tone().manual,'manual'); else { try{speechSynthesis.cancel();}catch(e){} } toast(S.voiceOn?'이제 소리로도 말할게':'소리는 껐어'); });
 $('#voiceTest').addEventListener('click',()=>{ const t=tone(); if(!S.voiceOn){ S.voiceOn=true; save(); render(); } speak(t.manual,'manual'); });
 $('#chars').addEventListener('click',e=>{ const b=e.target.closest('.ch'); if(!b) return; const k=b.dataset.k, t=TONES[k]; const act=e.target.closest('[data-act]')?.dataset.act;
@@ -707,7 +767,7 @@ function openLock(kind){
 }
 $('#holdBtn').addEventListener('click',()=>{ clearInterval(cnt); S.brHeld++; S.coins=(S.coins||0)+1; const a=Number($('#lockAmt').value)||0; S.brSaved=(S.brSaved||0)+a; save(); $('#lock').hidden=true; render();
   $$('.tab')[0].click(); ['#stHeld','#stSaved'].forEach(s=>{ const el=$(s); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
-  const hs=tone().hold(a?fmt(a):0); toast(hs+' · 코인 +1'); speak(hs,'hold'); });
+  const hs=tone().hold(a?fmt(a):0); toast(hs+' · 🪙 코인 +1'); sfx(); speak(hs,'hold'); });
 $('#manualBrake').addEventListener('click',()=>openLock('manual'));
 $('#buyBtn').addEventListener('click',()=>{ clearInterval(cnt); $('#lock').hidden=true; render(); toast(tone().buy); speak(tone().buy,'buy'); $$('.tab')[1].click(); });
 $('#demoNight').addEventListener('click',()=>{ const d=new Date(); d.setHours(22,14,0,0); clockOffset=d.getTime()-Date.now(); tick(); openLock('night'); });
@@ -719,7 +779,7 @@ try{ const d=new Date(); if(isNight(d)&&!sessionStorage.getItem('night-shown')){
 let tt; function toast(s){ const t=$('#toast'); t.textContent=s; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,2200); }
 
 try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
-render();
+render(); paydayBonus();
 })();
 </script>
 
